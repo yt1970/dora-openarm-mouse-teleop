@@ -5,15 +5,25 @@ A [dora-rs](https://dora-rs.ai/) node that teleoperates the end-effectors of
 [Dear PyGui](https://github.com/hoffstadt/DearPyGui) (pure pip, no VR headset,
 no leader arm).
 
-OpenArm の手先をマウスとキーボードで動かす dora-rs ノードです。VR ヘッドセットも
-リーダーアームも不要で、MuJoCo シミュレーション上でテレオペとデータ収集ができます。
+English | [日本語](README.ja.md)
 
 > **This is a derivative work.** It is based on the OpenArm slider teleop node
 > and on the dora-rs / OpenArm Cell tutorial in a note.com article. See
 > [Attribution](#attribution) for exactly what comes from where.
->
-> **本リポジトリは二次的著作物です。** スライダー版ノードと note の解説記事を参考に
-> しています。何がどこから来ているかは [Attribution](#attribution) に書いています。
+
+## Scope and safety
+
+- Tested **only with the MuJoCo simulation**. It has **not** been tested with
+  real OpenArm hardware.
+- The example dataflows are wired for MuJoCo (the current pose comes from the
+  simulator). Using real arms requires connecting `dora-openarm-ik` to the
+  real follower nodes and feeding `dora-openarm-fk` from the real arm state.
+  This is not provided here.
+- If you try it on real hardware, do it at your own risk, keep the emergency
+  stop within reach, and start with slow, small motions.
+- The setup below skips the real-hardware packages (`openarm-can`,
+  `openarm-driver`) because they need a CAN environment and extra system
+  libraries. Install them yourself if you need real arms.
 
 ## Controls
 
@@ -41,16 +51,17 @@ Tunable constants (reach, z range, smoothing, gripper step) are at the top of
 
 The node waits for the first `pose_right` and `pose_left`, uses them as the
 base pose, and then outputs the base pose plus the offset from the pad, the z
-control and the gripper. The first three elements of the pose are the position
-and the eighth element is the gripper.
+control and the gripper. The pose is `[x, y, z, qw, qx, qy, qz, gripper]`.
 
 ## Setup
 
 This repository contains only the mouse node. The rest of the dataflow
 (kinematics, MuJoCo simulation, data collection UI, recorder) comes from
 [enactic/dora-openarm-data-collection](https://github.com/enactic/dora-openarm-data-collection).
+You need [uv](https://docs.astral.sh/uv/) and Git, and **several GB of free
+disk space** (MuJoCo, OpenCV and other dependencies).
 
-1. Clone the upstream repository with its submodules and follow its setup.
+1. Clone the upstream repository with its submodules.
 
    ```bash
    git clone https://github.com/enactic/dora-openarm-data-collection
@@ -64,33 +75,67 @@ This repository contains only the mouse node. The rest of the dataflow
    git clone https://github.com/yt1970/dora-openarm-mouse-teleop nodes/dora-openarm-mouse-teleop
    ```
 
-3. Copy an example dataflow to the upstream root and run it. The `build:` paths
-   in the examples are relative to the upstream root.
+3. Install the dependencies, without the real-hardware packages, and then the
+   mouse node into the same environment.
+
+   ```bash
+   uv sync --locked --no-install-package openarm-can --no-install-package openarm-driver
+   source .venv/bin/activate
+   uv pip install -e nodes/dora-openarm-mouse-teleop
+   ```
+
+   Do not run `uv sync` again after this: it removes packages that are not in
+   the upstream lockfile, including this node. If you do, run the
+   `uv pip install -e` line again.
+
+   Why the two packages are skipped: `openarm-can` is built from C++ and needs
+   the CLI11 library, and CAN is mainly for Linux. Upstream's CI installs
+   `libcli11-dev` on Ubuntu and then runs a plain `uv sync --locked`. For the
+   simulation they are not needed.
+
+4. Copy the example dataflow to the upstream root and run it.
 
    ```bash
    cp nodes/dora-openarm-mouse-teleop/examples/dataflow_mouse_teleop.yaml .
-   uv venv && uv pip install dora-rs-cli && source .venv/bin/activate
-   dora build dataflow_mouse_teleop.yaml --uv
-   dora run dataflow_mouse_teleop.yaml --uv
+   UV_NO_SYNC=1 dora run dataflow_mouse_teleop.yaml --uv
    ```
 
-   For data collection with the web UI (open http://localhost:8000), use
-   `dataflow_mouse_teleop_data_collection.yaml` instead. Recorded datasets are
-   saved to `mouse_mujoco_data/`.
+   `UV_NO_SYNC=1` keeps `uv run` (used by dora with `--uv`) from syncing the
+   environment again. A Dear PyGui window (pad and `z` slider) and a MuJoCo
+   window should open.
 
-   On macOS, MuJoCo's viewer needs `mjpython`. Copy
-   [`examples/mujoco_mac.sh`](examples/mujoco_mac.sh) to the upstream root, run
-   `chmod +x mujoco_mac.sh`, and set `path: ./mujoco_mac.sh` on the
-   `mujoco-collect` node.
+   **On macOS**, if the MuJoCo viewer does not open or the node fails to
+   start, try the `mjpython` wrapper
+   [`examples/mujoco_mac.sh`](examples/mujoco_mac.sh) (the macOS workaround from
+   the note article in [Attribution](#attribution)):
 
-## Compatibility
+   ```bash
+   cp nodes/dora-openarm-mouse-teleop/examples/mujoco_mac.sh .
+   chmod +x mujoco_mac.sh
+   sed -i '' 's#path: dora-openarm-mujoco#path: ./mujoco_mac.sh#' dataflow_mouse_teleop.yaml
+   ```
 
-- Developed on macOS with MuJoCo against the upstream layout that has one
-  `dataflow-*.yaml` file per setup. It has not been tested on other platforms.
+   I ran my checks with this wrapper on macOS. I have not checked whether it is
+   required, so it is not required by these instructions.
+
+`examples/dataflow_mouse_teleop_data_collection.yaml` adds the data collection
+web UI (http://localhost:8000) and the recorder. It has **not been verified
+yet** with the current upstream version.
+
+## Tested environment
+
+- macOS, Python 3.12, dora-rs / dora-rs-cli 1.0.1, with the upstream
+  repository cloned on 2026-10-18 (submodules as pinned by that revision).
+- Only `examples/dataflow_mouse_teleop.yaml` (teleoperation in MuJoCo) has
+  been run, on macOS **with the `mujoco_mac.sh` wrapper** (running without it
+  has not been checked). Moving the arms with the pad, the `z` control and the
+  gripper (mouse wheel) has been checked. Other platforms, the data collection
+  dataflow and real hardware have not been tested.
 - Recent upstream versions use a single `dataflow.yaml` with `leader-*.yaml`
-  modules whose outputs are `follower_position_*`. The examples here do not
-  target that layout yet. Wrapping this node, `dora-openarm-ik` and
-  `dora-openarm-fk` in a `leader-mouse.yaml` module is future work.
+  modules whose outputs are `follower_position_*`. The examples here are
+  standalone dataflows and do not plug into that layout yet. Wrapping this node,
+  `dora-openarm-ik` and `dora-openarm-fk` in a `leader-mouse.yaml` module is
+  future work.
 
 ## Attribution
 

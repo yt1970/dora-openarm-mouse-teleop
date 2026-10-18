@@ -1,12 +1,11 @@
 # Mouse teleoperation of OpenArm in MuJoCo.
 #
 # Run from the root of a clone of
-# https://github.com/enactic/dora-openarm-data-collection (with submodules),
-# after cloning this repository to nodes/dora-openarm-mouse-teleop.
-# `build:` paths are relative to that root.
+# https://github.com/enactic/dora-openarm-data-collection after the setup in
+# this repository's README (uv sync, then install the mouse node into the same
+# environment). There are no `build:` lines: dependencies are installed by uv.
 nodes:
   - id: mouse-teleop
-    build: pip install -e nodes/dora-openarm-mouse-teleop
     path: dora-openarm-mouse-teleop
     inputs:
       tick: dora/timer/millis/20
@@ -19,7 +18,6 @@ nodes:
       - button_x
 
   - id: ik
-    build: pip install -e nodes/dora-openarm-kinematics
     path: dora-openarm-ik
     args: "--tick-hz 50 --limit-velocity"
     inputs:
@@ -30,7 +28,6 @@ nodes:
       - position_left
 
   - id: fk
-    build: pip install -e nodes/dora-openarm-kinematics
     path: dora-openarm-fk
     inputs:
       position_right: mujoco-collect/position_right
@@ -40,8 +37,8 @@ nodes:
       - pose_left
 
   - id: mujoco-collect
-    build: pip install -e nodes/dora-openarm-mujoco
-    # On macOS use ./mujoco_mac.sh (copy examples/mujoco_mac.sh to the root).
+    # On macOS, if the viewer does not open, try `path: ./mujoco_mac.sh`
+    # instead (copy examples/mujoco_mac.sh to the root and `chmod +x` it).
     path: dora-openarm-mujoco
     args: "--scene demo --keyframe home --enable-collision --ctrl --viewer --render"
     inputs:
