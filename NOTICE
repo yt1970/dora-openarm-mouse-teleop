@@ -1,0 +1,24 @@
+dora-openarm-mouse-teleop
+Modifications Copyright 2026 yt1970
+
+This product is a derivative work and includes software developed by others:
+
+  OpenArm slider teleop node
+  https://github.com/k1000dai/dora-openarm-slider-teleop
+  Copyright 2026 Enactic, Inc.
+  Licensed under the Apache License, Version 2.0.
+
+  dora-openarm-data-collection (example dataflows are adapted from the
+  dataflows of this project and from the explanation in the article below)
+  https://github.com/enactic/dora-openarm-data-collection
+  Copyright 2026 Enactic, Inc.
+  Licensed under the Apache License, Version 2.0.
+
+The following article was used as a guide when building this project:
+
+  "OpenArm Cell で学ぶ dora-rs (MuJoCo)[起動~data collectionまで]" by chiyo_note
+  https://note.com/duckduck1836/n/nfb1b17e7e897
+
+Changes: the joint sliders of the slider teleop node were replaced with
+mouse / keyboard control of end-effector targets, and the output was changed
+from joint positions to target poses for inverse kinematics.

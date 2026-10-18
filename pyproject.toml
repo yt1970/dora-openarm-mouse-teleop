@@ -1,0 +1,41 @@
+# Copyright 2026 Enactic, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+[project]
+name = "dora-openarm-mouse-teleop"
+version = "0.1.0"
+description = "dora-rs node to teleoperate OpenArm end-effectors with a mouse and keyboard (Dear PyGui)"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [{name = "yt1970"}]
+requires-python = "==3.12.*"
+dependencies = [
+    "dora-rs >= 0.5.0",
+    "dearpygui >= 1.11",
+    "numpy",
+    "pyarrow",
+]
+
+[project.urls]
+Repository = "https://github.com/yt1970/dora-openarm-mouse-teleop"
+
+[project.scripts]
+dora-openarm-mouse-teleop = "dora_openarm_mouse_teleop.main:main"
+
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
