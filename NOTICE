@@ -1,5 +1,5 @@
 dora-openarm-mouse-teleop
-Modifications Copyright 2026 yt1970
+Copyright 2026 yt1970 (modifications and original parts)
 
 This product is a derivative work and includes software developed by others:
 
@@ -14,11 +14,18 @@ This product is a derivative work and includes software developed by others:
   Copyright 2026 Enactic, Inc.
   Licensed under the Apache License, Version 2.0.
 
-The following article was used as a guide when building this project:
+The following article was used as a guide when building the mouse node:
 
   "OpenArm Cell で学ぶ dora-rs (MuJoCo)[起動~data collectionまで]" by chiyo_note
   https://note.com/duckduck1836/n/nfb1b17e7e897
 
-Changes: the joint sliders of the slider teleop node were replaced with
+Changes to the slider teleop node: the joint sliders were replaced with
 mouse / keyboard control of end-effector targets, and the output was changed
 from joint positions to target poses for inverse kinematics.
+
+Original parts: the iPhone teleop node (dora_openarm_iphone_teleop) and the
+iOS app (ios/PhoneTeleop). No external article or repository was used as a
+direct reference for them.
+
+AI assistance: the code and documentation of this project were developed in
+dialogue with Claude Sonnet 5.5 (Anthropic).

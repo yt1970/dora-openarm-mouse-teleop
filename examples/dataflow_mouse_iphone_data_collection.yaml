@@ -1,0 +1,109 @@
+# Mouse + iPhone teleoperation of OpenArm in MuJoCo with the data collection
+# UI and the dataset recorder. Data is saved to iphone_mouse_mujoco_data/.
+#
+# This wiring was used for data collection on the author's own setup, but it
+# has NOT been re-verified with a fresh clone of the current upstream
+# repository. Please report problems.
+#
+# See dataflow_mouse_iphone.yaml for how the arms are shared between the
+# iPhone and the mouse. Run from the root of a clone of
+# https://github.com/enactic/dora-openarm-data-collection after the setup in
+# this repository's README. metadata_mujoco.yaml is the upstream file at that
+# root. There are no `build:` lines: dependencies are installed by uv.
+nodes:
+  - id: mouse-teleop
+    path: dora-openarm-mouse-teleop
+    inputs:
+      tick: dora/timer/millis/20
+      pose_right: fk/pose_right
+      pose_left: fk/pose_left
+      phone_sides: iphone-teleop/phone_sides
+    outputs:
+      - target_right
+      - target_left
+      - status
+      - button_x
+
+  - id: iphone-teleop
+    path: dora-openarm-iphone-teleop
+    env:
+      IPHONE_PORT: "5007"
+    inputs:
+      tick: dora/timer/millis/20
+      pose_right: fk/pose_right
+      pose_left: fk/pose_left
+      mouse_target_right: mouse-teleop/target_right
+      mouse_target_left: mouse-teleop/target_left
+    outputs:
+      - target_right
+      - target_left
+      - phone_sides
+      - status
+
+  - id: ik
+    path: dora-openarm-ik
+    args: "--tick-hz 50 --limit-velocity"
+    inputs:
+      target_right: iphone-teleop/target_right
+      target_left: iphone-teleop/target_left
+    outputs:
+      - position_right
+      - position_left
+
+  - id: fk
+    path: dora-openarm-fk
+    inputs:
+      position_right: mujoco-collect/position_right
+      position_left: mujoco-collect/position_left
+    outputs:
+      - pose_right
+      - pose_left
+
+  - id: mujoco-collect
+    # On macOS, if the viewer does not open, try `path: ./mujoco_mac.sh`
+    # instead (copy examples/mujoco_mac.sh to the root and `chmod +x` it).
+    path: dora-openarm-mujoco
+    args: "--scene demo --keyframe home --enable-collision --ctrl --viewer --render"
+    inputs:
+      move_position_right: ik/position_right
+      move_position_left: ik/position_left
+      request_position: dora/timer/millis/20
+      request_state: dora/timer/millis/4
+      button_x: mouse-teleop/button_x
+    outputs:
+      - status
+      - position_right
+      - position_left
+      - state_right
+      - state_left
+      - camera_wrist_right
+      - camera_wrist_left
+      - camera_head_left
+      - camera_head_right
+      - camera_ceiling
+
+  - id: ui
+    path: dora-openarm-data-collection-ui
+    env:
+      METADATA_FILE: "metadata_mujoco.yaml"
+    inputs:
+      tick: dora/timer/secs/1
+    outputs:
+      - command
+
+  - id: recorder
+    path: dora-openarm-dataset-recorder
+    env:
+      METADATA_FILE: "metadata_mujoco.yaml"
+      DIRECTORY: "iphone_mouse_mujoco_data"
+    inputs:
+      command: ui/command
+      arm_right_action: ik/position_right
+      arm_right_observation: mujoco-collect/state_right
+      arm_left_action: ik/position_left
+      arm_left_observation: mujoco-collect/state_left
+      camera_wrist_right: mujoco-collect/camera_wrist_right
+      camera_wrist_left: mujoco-collect/camera_wrist_left
+      camera_head_left: mujoco-collect/camera_head_left
+      camera_head_right: mujoco-collect/camera_head_right
+      camera_ceiling: mujoco-collect/camera_ceiling

@@ -14,8 +14,8 @@
 
 [project]
 name = "dora-openarm-mouse-teleop"
-version = "0.1.0"
-description = "dora-rs node to teleoperate OpenArm end-effectors with a mouse and keyboard (Dear PyGui)"
+version = "0.2.0"
+description = "dora-rs nodes to teleoperate OpenArm end-effectors with a mouse and keyboard (Dear PyGui) and with an iPhone (ARKit)"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [{name = "yt1970"}]
@@ -27,11 +27,16 @@ dependencies = [
     "pyarrow",
 ]
 
+[project.optional-dependencies]
+# Needed only by the iPhone node.
+iphone = ["scipy"]
+
 [project.urls]
 Repository = "https://github.com/yt1970/dora-openarm-mouse-teleop"
 
 [project.scripts]
 dora-openarm-mouse-teleop = "dora_openarm_mouse_teleop.main:main"
+dora-openarm-iphone-teleop = "dora_openarm_iphone_teleop.main:main"
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]
